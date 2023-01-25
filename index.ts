@@ -25,9 +25,6 @@ requestDict(function (res) {
   const indexed = createIndexedDict(res);
   let i = 0;
   for (const key in indexed) {
-    if (i < 10) {
-      trie.insert(key);
-    }
-    ++i;
+    trie.insert(key);
   }
 });
