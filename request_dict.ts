@@ -14,5 +14,5 @@ export function requestDict(
 }
 
 function onSuccessDefault(res) {
-  console.log('what?', res);
+  console.log('dictionary loaded: ', res);
 }
