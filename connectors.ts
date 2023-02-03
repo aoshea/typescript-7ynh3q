@@ -32,32 +32,20 @@ const starters = Object.keys(indexed_dict).filter((x) => x.length === MAX_LEN);
 
 const result = [];
 
-for (const starter of starters) {
-  const set = [starter];
-  // remove one letter and check if it exists to add to game set
-  let node;
-  let temp_connx = null;
-  let q = [];
-  q = q.concat(getRemovedCharList(starter));
-  while (q.length > 0) {
-    node = q.pop();
-    if (temp_connx && temp_connx.length <= node.length) {
-      temp_connx = null;
-    }
-    if (indexed_dict[node]) {
-      if (temp_connx) {
-        // add to set,
-        set.push(temp_connx);
-      }
-      temp_connx = node;
-      if (node.length === MIN_LEN) {
-        result.push(set.slice(0).concat(node));
-        q = [];
-      } else {
-        q = q.concat(getRemovedCharList(node));
-      }
-    }
-  }
+type Node = {
+  parent?: Node;
+  value: string;
+  children: Node[];
+  is_complete: boolean;
+};
+
+function toNode(x: string, parent?: Node) {
+  return {
+    parent: parent,
+    value: x,
+    children: [],
+    is_complete: x.length === 3,
+  };
 }
 
 function removeCharAtIndex(x, index) {
@@ -78,36 +66,36 @@ export function findConnectors(indexed: Record<string, string[]>): string[] {
   const truncated = truncateIndexedDict(indexed, 3, 7);
   // then pop off all max words
   const starters = Object.keys(truncated).filter((x) => x.length === 7);
+  const result = [];
 
-  for (const starter of starters) {
-    let depth = 0;
-    const collection = [];
-    const q = [];
-    q.push(...getRemovedCharList(starter));
+  for (const x of starters) {
+    let node = toNode(x);
+    node.children.push(...getRemovedCharList(x).map((x) => toNode(x, node)));
+
+    const q = [...node.children];
+
+    let curr = null;
     while (q.length > 0) {
-      const key = q.pop();
-      depth = key.length;
-      const isKey = typeof truncated[key] !== 'undefined';
-      if (isKey) {
-        console.log(depth, 'found key!', key);
-        // save it at depth point
-        if (Array.isArray(collection[depth])) {
-          collection[depth].push(key);
+      curr = q.pop();
+      if (indexed[curr.value]) {
+        if (curr.value.length > 3) {
+          const new_nodes = getRemovedCharList(curr.value).map((x) =>
+            toNode(x, curr)
+          );
+          curr.children.push(...new_nodes);
+          q.push(...new_nodes);
         } else {
-          console.log('save it');
-          collection[depth] = [key];
+          let printer = curr;
+          let set = [curr.value];
+          while (printer) {
+            set.push(printer.value);
+            printer = printer.parent;
+          }
+          result.push(set);
         }
-
-        // better check all the subs of this node then too
-        q.push(...getRemovedCharList(key));
-      } else {
-        // i guess we go up a depth? er..
-        console.log('nothing found for this key');
-        console.log(`at depth:${depth} key:${key}`);
       }
     }
-    console.log('collection', collection);
   }
 
-  return [''];
+  return result;
 }

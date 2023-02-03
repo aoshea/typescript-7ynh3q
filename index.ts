@@ -18,11 +18,16 @@ const indexed = createIndexedDict(test_dict, ' ');
 for (const key in indexed) {
   trie.insert(key);
 }
-console.log(findConnectors(indexed));
+// console.log(findConnectors(indexed));
 
 requestDict(function (res) {
   const indexed = createIndexedDict(res);
   for (const key in indexed) {
     trie.insert(key);
+  }
+  const connectors = findConnectors(indexed);
+  console.log(connectors.length);
+  for (const ok of connectors[0]) {
+    console.log(indexed[ok]);
   }
 });
